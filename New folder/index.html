@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Production Board</title>
+    <style>
+      :root {
+        /* Colors */
+        --bg: #09131f;
+        --panel: rgba(12, 25, 38, 0.9);
+        --panel-2: rgba(15, 31, 48, 0.9);
+        --panel-3: rgba(23, 44, 67, 0.95);
+        --line: rgba(127, 203, 255, 0.3);
+        --text: #eaf6ff;
+        --muted: #9bb8d1; 
+        --good: #32d296;
+        --warn: #ffc857;
+        --bad: #ff6b6b;
+        --accent: #5fc5ff;
+        --accent-2: #7cf7c3;
+        --shadow: rgba(0, 0, 0, 0.35);
+        
+        /* Station type colors */
+        --type-source: #66b5ff;
+        --type-process: #5bffba;
+        --type-inspection: #ffd76a;
+        --type-repair: #ff7d7d;
+        --type-sink: #cda8ff;
+        
+        /* Spacing */
+        --spacing-xs: 4px;
+        --spacing-sm: 8px;
+        --spacing-md: 12px;
+        --spacing-lg: 18px;
+        --spacing-xl: 24px;
+        
+        /* Border radius */
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 18px;
+        --radius-full: 999px;
+        
+        /* Transitions */
+        --transition-fast: 0.2s ease;
+        --transition-standard: 0.3s ease;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: linear-gradient(180deg, #071119 0%, #0e1d2b 40%, #0b1621 100%);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-lg) var(--spacing-xl);
+        border-bottom: 1px solid var(--line);
+        background: rgba(11, 17, 25, 0.7);
+        backdrop-filter: blur(10px);
+        gap: var(--spacing-md);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+
+      .brand-mark {
+        width: 14px;
+        height: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-radius: var(--radius-sm);
+        box-shadow: 0 0 18px rgba(95, 197, 255, 0.7);
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: transform var(--transition-fast);
+      }
+
+      .brand-mark:hover {
+        transform: scale(1.2);
+      }
+
+      .brand h1 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .actions {
+        display: flex;
+        gap: var(--spacing-md);
+        flex-wrap: wrap;
+      }
+
+      .control-group {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+        padding: 0 var(--spacing-md);
+        border-right: 1px solid var(--line);
+      }
+
+      .control-group:last-child {
+        border-right: none;
+      }
+
+      .slider-control {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        white-space: nowrap;
+      }
+
+      .slider-control label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .slider-control input[type="range"] {
+        width: 100px;
+        height: 6px;
+        cursor: pointer;
+      }
+
+      .slider-value {
+        min-width: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      button {
+        border: 1px solid rgba(128, 188, 255, 0.3);
+        background: linear-gradient(180deg, rgba(18, 38, 56, 0.95), rgba(11, 24, 35, 0.95));
+        color: var(--text);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform var(--transition-fast), border-color var(--transition-fast);
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+
+      button:hover {
+        border-color: rgba(128, 188, 255, 0.7);
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, rgba(29, 120, 178, 0.9), rgba(42, 214, 156, 0.9));
+        border-color: rgba(101, 245, 199, 0.8);
+      }
+
+      button.warn {
+        background: linear-gradient(135deg, rgba(173, 120, 17, 0.9), rgba(203, 72, 39, 0.9));
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+        padding: 20px;
+        flex: 1;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 18px 30px var(--shadow);
+      }
+
+      .config-panel {
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .station-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        max-height: 66vh;
+        overflow: auto;
+        padding-right: var(--spacing-xs);
+      }
+
+      .station-card {
+        background: linear-gradient(180deg, rgba(18, 33, 48, 0.9), rgba(10, 22, 33, 0.9));
+        border: 1px solid rgba(118, 174, 233, 0.2);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        cursor: pointer;
+        transition: all var(--transition-standard);
+        user-select: none;
+      }
+
+      .station-card:hover {
+        border-color: var(--accent);
+        background: linear-gradient(180deg, rgba(25, 40, 55, 0.95), rgba(15, 28, 40, 0.95));
+        box-shadow: 0 0 12px rgba(95, 197, 255, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .station-card.disabled {
+        opacity: 0.5;
+        border-color: rgba(255, 107, 107, 0.3);
+      }
+
+      .station-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .station-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        flex: 1;
+      }
+
+      .station-toggle {
+        width: 32px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        position: relative;
+        transition: background var(--transition-fast);
+        margin-left: var(--spacing-sm);
+      }
+
+      .station-toggle::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: var(--text);
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: left var(--transition-fast);
+      }
+
+      .station-toggle.active {
+        background: rgba(50, 210, 150, 0.3);
+        border-color: var(--good);
+      }
+
+      .station-toggle.active::after {
+        left: 16px;
+        background: var(--good);
+      }
+
+      .station-type {
+        font-size: 0.7rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-full);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .station-type.source { background: rgba(54, 120, 227, 0.12); color: #8dd3ff; border-color: rgba(102, 181, 255, 0.4); }
+      .station-type.process { background: rgba(17, 197, 145, 0.12); color: #8bf0c5; border-color: rgba(91, 255, 186, 0.4); }
+      .station-type.inspection { background: rgba(255, 200, 87, 0.12); color: #ffe39e; border-color: rgba(255, 215, 106, 0.4); }
+      .station-type.repair { background: rgba(255, 107, 107, 0.12); color: #ffb0af; border-color: rgba(255, 125, 125, 0.4); }
+      .station-type.sink { background: rgba(125, 96, 255, 0.12); color: #d0bafc; border-color: rgba(205, 168, 255, 0.4); }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .field input {
+        width: 100%;
+        border: 1px solid rgba(157, 193, 227, 0.25);
+        background: rgba(9, 18, 26, 0.8);
+        color: var(--text);
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-sm) var(--spacing-xs);
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: border-color var(--transition-fast), background-color var(--transition-fast);
+      }
+
+      .field input:hover {
+        border-color: rgba(157, 193, 227, 0.5);
+      }
+
+      .field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: rgba(9, 18, 26, 0.95);
+      }
+
+      .floor-panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-lg);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(110px, 1fr));
+        gap: var(--spacing-md);
+      }
+
+      .stat {
+        background: linear-gradient(180deg, rgba(16, 33, 49, 0.9), rgba(9, 20, 32, 0.9));
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md) var(--spacing-sm);
+        transition: border-color var(--transition-standard), box-shadow var(--transition-standard);
+      }
+
+      .stat:hover {
+        border-color: var(--accent);
+        box-shadow: 0 0 16px rgba(95, 197, 255, 0.2);
+      }
+
+      .stat .label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: var(--spacing-sm);
+        font-weight: 600;
+      }
+
+      .stat .value {
+        font-size: clamp(1.1rem, 2vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .good { color: var(--good); }
+      .warn { color: var(--warn); }
+      .bad { color: var(--bad); }
+      .accent { color: var(--accent); }
+
+      .board-wrap {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(10, 17, 28, 0.9), rgba(12, 22, 35, 0.9));
+        min-height: 560px;
+        overflow: hidden;
+      }
+
+      .board-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(90, 147, 199, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(90, 147, 199, 0.08) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .route-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .flow-arrow {
+        fill: none;
+        stroke: #5fc5ff;
+        stroke-width: 1.5;
+        opacity: 0.7;
+        marker-end: url(#arrowhead);
+      }
+
+      .flow-arrow.repair {
+        stroke: #ff8a8a;
+      }
+
+      #arrowhead {
+        fill: #5fc5ff;
+      }
+
+      .station {
+        position: absolute;
+        width: 150px;
+        min-height: 100px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(180deg, rgba(18, 36, 59, 0.9), rgba(10, 25, 38, 0.95));
+        border: 1px solid rgba(120, 193, 255, 0.28);
+        box-shadow: 0 12px 18px rgba(0, 0, 0, 0.25);
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: var(--spacing-md) var(--spacing-sm) var(--spacing-sm) var(--spacing-sm);
+        transition: box-shadow var(--transition-fast);
+        cursor: grab;
+        user-select: none;
+      }
+
+      .station:hover {
+        box-shadow: 0 12px 24px rgba(95, 197, 255, 0.2);
+      }
+
+      .station.dragging {
+        cursor: grabbing;
+        box-shadow: 0 0 32px rgba(95, 197, 255, 0.6);
+        border-color: rgba(95, 197, 255, 0.8);
+        z-index: 1000;
+      }
+
+      .station.source { border-color: rgba(117, 161, 255, 0.7); }
+      .station.process { border-color: rgba(76, 255, 181, 0.7); }
+      .station.inspection { border-color: rgba(255, 201, 87, 0.8); }
+      .station.repair { border-color: rgba(255, 101, 101, 0.8); }
+      .station.sink { border-color: rgba(156, 125, 255, 0.8); }
+
+      .station-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .station-heat {
+        --heat-fill: 30%;
+        --heat-color: rgba(91, 223, 255, 0.95);
+        position: relative;
+        width: 54px;
+        height: 8px;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(164, 204, 255, 0.2);
+        overflow: hidden;
+        margin: 0 0 var(--spacing-sm) auto;
+        flex-shrink: 0;
+      }
+
+      .station-heat::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--heat-fill);
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(76, 253, 171, 0.9), var(--heat-color));
+        box-shadow: 0 0 12px var(--heat-color);
+        transition: width 0.3s ease;
+      }
+
+      .station-title {
+        font-weight: 700;
+        font-size: 0.86rem;
+        white-space: nowrap;
+      }
+
+      .station-status {
+        border-radius: var(--radius-full);
+        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.04);
+        font-size: 0.64rem;
+        padding: 3px 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .station-metrics {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .station-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xs);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: var(--spacing-sm);
+        font-size: 0.75rem;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+      }
+
+      .stat-item .value {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .stat-item.good .value {
+        color: var(--good);
+      }
+
+      .stat-item.warn .value {
+        color: var(--warn);
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition-fast);
+      }
+
+      .modal-close:hover {
+        color: var(--text);
+      }
+
+      .modal-section {
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .modal-section h3 {
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
+
+      .modal-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+      }
+
+      .modal-stat {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-sm);
+      }
+
+      .modal-stat-label {
+        font-size: 0.7rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: var(--spacing-xs);
+      }
+
+      .modal-stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: var(--text);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 500;
+        display: none;
+      }
+
+      .tooltip.show {
+        display: block;
+      }
+
+      .help-text {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: var(--spacing-xs);
+        font-style: italic;
+      }
+
+      .station-q {
+        display: none;
+      }
+
+      .unit-chip {
+        display: none;
+      }
+
+      .unit-chip.fail {
+        display: none;
+      }
+
+      .unit-chip.done {
+        display: none;
+      }
+
+      .unit-moving {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5cc7ff, #9afdd4);
+        box-shadow: 0 0 16px rgba(92, 199, 255, 0.8);
+        border: 2px solid rgba(255,255,255,0.75);
+        pointer-events: none;
+        z-index: 25;
+        will-change: transform;
+      }
+
+      .unit-moving.fail {
+        background: linear-gradient(135deg, #ff9b8a, #ff5c64);
+        box-shadow: 0 0 18px rgba(255, 92, 100, 0.9);
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+        padding-top: var(--spacing-sm);
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 1100px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, minmax(110px, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        .topbar {
+          padding: var(--spacing-md) var(--spacing-lg);
+        }
+
+        .brand h1 {
+          font-size: 1rem;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .station-type {
+          font-size: 0.65rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" title="Click to show help"></div>
+        <h1 title="Production Simulator">Production Live Floor</h1>
+      </div>
+      <div class="control-group">
+        <div class="slider-control">
+          <label for="spawnRate">Spawn Rate</label>
+          <input type="range" id="spawnRate" min="500" max="3000" value="1600" step="100">
+          <span class="slider-value" id="spawnRateDisplay">1.6x/s</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="slider-control">
+          <label for="animSpeed">Speed</label>
+          <input type="range" id="animSpeed" min="0.5" max="2" value="1" step="0.1">
+          <span class="slider-value" id="animSpeedDisplay">1.0x</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="toggleRun" class="primary" title="Pause/Resume simulation (Space)">Pause</button>
+        <button id="injectBtn" title="Inject one unit (I)">Inject Unit</button>
+        <button id="exportBtn" title="Export simulation data">Export Data</button>
+        <button id="resetBtn" class="warn" title="Reset all data (R)">Reset</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel config-panel">
+        <div class="panel-header">
+          <h2>Station Controls</h2>
+        </div>
+        <div id="stationList" class="station-list"></div>
+      </aside>
+
+      <section class="panel floor-panel">
+        <div class="stats">
+          <div class="stat">
+            <span class="label">Input</span>
+            <span id="statInput" class="value accent">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">WIP</span>
+            <span id="statWip" class="value warn">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Passed</span>
+            <span id="statPassed" class="value good">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Repair</span>
+            <span id="statRepair" class="value bad">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Output</span>
+            <span id="statOutput" class="value accent">0</span>
+          </div>
+        </div>
+
+        <div id="boardWrap" class="board-wrap">
+          <div class="board-grid"></div>
+          <div id="routeLayer"></div>
+          <div id="stationLayer"></div>
+          <div id="unitLayer"></div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:#6ee6ff"></span> Active</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span> Repair route</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#45d19a"></span> Passed</div>
+        </div>
+      </section>
+    </main>
+
+    <div id="detailModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Station Details</h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+      // ==================== UTILITIES ====================
+      
+      const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const formatTime = (ms) => `${Math.max(0, Math.round(ms / 100) / 10)}s`;
+      const colorForType = (type) => ({
+        source: '#66b5ff',
+        process: '#5bffba',
+        inspection: '#ffd76a',
+        repair: '#ff7d7d',
+        sink: '#cda8ff'
+      })[type] || '#cda8ff';
+
+      // ==================== CONFIGURATION ====================
+
+      const stationDefs = [
+        { id: 'inbound', name: 'Inbound', type: 'source', x: 120, y: 230, processingTime: 1200, failureRate: 0, passTo: 'laser', failTo: null },
+        { id: 'laser', name: 'Laser Cut', type: 'process', x: 300, y: 230, processingTime: 1800, failureRate: 0, passTo: 'qa1', failTo: null },
+        { id: 'qa1', name: 'QA 1', type: 'inspection', x: 500, y: 230, processingTime: 1500, failureRate: 0.14, passTo: 'finalqa', failTo: 'repair' },
+        { id: 'repair', name: 'Repair', type: 'repair', x: 500, y: 420, processingTime: 2200, failureRate: 0, passTo: 'finalqa', failTo: null },
+        { id: 'finalqa', name: 'Final QA', type: 'inspection', x: 720, y: 230, processingTime: 1700, failureRate: 0.08, passTo: 'pack', failTo: 'repair' },
+        { id: 'pack', name: 'Pack', type: 'process', x: 930, y: 230, processingTime: 1400, failureRate: 0, passTo: 'outbound', failTo: null },
+        { id: 'outbound', name: 'Outbound', type: 'sink', x: 1120, y: 230, processingTime: 800, failureRate: 0, passTo: null, failTo: null }
+      ];
+
+      // ==================== STATE MANAGEMENT ====================
+
+      const state = {
+        started: true,
+        units: [],
+        lastId: 0,
+        inputTotal: 0,
+        outputTotal: 0,
+        repairTotal: 0,
+        failedTotal: 0,
+        lastTs: 0,
+        sourceSpawnMs: 1600,
+        sourceAccumulator: 0,
+        animationSpeed: 1,
+        stations: stationDefs.map((station) => ({ 
+          ...station, 
+          queue: [], 
+          busy: false, 
+          processed: 0, 
+          repaired: 0,
+          failed: 0,
+          output: 0,
+          enabled: true,
+          totalProcessTime: 0,
+          unitCount: 0
+        }))
+      };
+
+      const stationMap = new Map();
+      state.stations.forEach((station) => stationMap.set(station.id, station));
+
+      // ==================== DOM CACHE ====================
+
+      const dom = {
+        boardWrap: document.getElementById('boardWrap'),
+        stationLayer: document.getElementById('stationLayer'),
+        routeLayer: document.getElementById('routeLayer'),
+        unitLayer: document.getElementById('unitLayer'),
+        stationList: document.getElementById('stationList'),
+        statInput: document.getElementById('statInput'),
+        statWip: document.getElementById('statWip'),
+        statPassed: document.getElementById('statPassed'),
+        statRepair: document.getElementById('statRepair'),
+        statOutput: document.getElementById('statOutput'),
+        toggleRun: document.getElementById('toggleRun'),
+        injectBtn: document.getElementById('injectBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        exportBtn: document.getElementById('exportBtn'),
+        spawnRate: document.getElementById('spawnRate'),
+        spawnRateDisplay: document.getElementById('spawnRateDisplay'),
+        animSpeed: document.getElementById('animSpeed'),
+        animSpeedDisplay: document.getElementById('animSpeedDisplay'),
+        detailModal: document.getElementById('detailModal'),
+        modalClose: document.getElementById('modalClose'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalBody: document.getElementById('modalBody'),
+        tooltip: document.getElementById('tooltip')
+      };
+
+      // ==================== MODAL & DETAIL MANAGEMENT ====================
+
+      function showStationDetails(stationId) {
+        const station = stationMap.get(stationId);
+        if (!station) return;
+
+        const throughput = station.unitCount > 0 ? (station.processed / station.unitCount * 100).toFixed(1) : '0';
+        const avgTime = station.unitCount > 0 ? (station.totalProcessTime / station.processed).toFixed(0) : '0';
+
+        dom.modalTitle.textContent = station.name;
+        dom.modalBody.innerHTML = `
+          <div class="modal-section">
+            <h3>Configuration</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Type</div>
+                <div class="modal-stat-value" style="font-size: 0.9rem; text-transform: uppercase; color: ${colorForType(station.type)}">${station.type}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Status</div>
+                <div class="modal-stat-value" style="font-size: 0.85rem; color: ${station.enabled ? 'var(--good)' : 'var(--bad)'}">${station.enabled ? 'Enabled' : 'Disabled'}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Process Time (ms)</div>
+                <div class="modal-stat-value">${station.processingTime}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Failure Rate</div>
+                <div class="modal-stat-value">${(station.failureRate * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>Current Status</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Queue Length</div>
+                <div class="modal-stat-value">${station.queue.length}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Status</div>
+                <div class="modal-stat-value" style="font-size: 0.9rem; color: ${station.busy ? 'var(--warn)' : 'var(--good)'}">${station.busy ? 'Processing' : 'Idle'}</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>Statistics</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Total Processed</div>
+                <div class="modal-stat-value">${station.processed}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Failed Units</div>
+                <div class="modal-stat-value" style="color: var(--bad)">${station.failed}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Throughput</div>
+                <div class="modal-stat-value">${throughput}%</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Avg Time (ms)</div>
+                <div class="modal-stat-value">${avgTime}</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        dom.detailModal.classList.add('active');
+      }
+
+      function closeModal() {
+        dom.detailModal.classList.remove('active');
+      }
+
+      // ==================== RENDERING ====================
+
+      function createStationConfigControls() {
+        dom.stationList.innerHTML = '';
+
+        state.stations.forEach((station) => {
+          const card = document.createElement('div');
+          card.className = `station-card ${!station.enabled ? 'disabled' : ''}`;
+          card.setAttribute('data-station-id', station.id);
+
+          const head = document.createElement('div');
+          head.className = 'station-head';
+
+          const name = document.createElement('div');
+          name.className = 'station-name';
+          name.textContent = station.name;
+
+          const type = document.createElement('div');
+          type.className = `station-type ${station.type}`;
+          type.textContent = station.type;
+          type.setAttribute('title', `Station type: ${station.type}`);
+
+          const toggle = document.createElement('div');
+          toggle.className = `station-toggle ${station.enabled ? 'active' : ''}`;
+          toggle.title = `Click to ${station.enabled ? 'disable' : 'enable'} station`;
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            station.enabled = !station.enabled;
+            card.classList.toggle('disabled');
+            toggle.classList.toggle('active');
+          });
+
+          head.appendChild(name);
+          head.appendChild(type);
+          head.appendChild(toggle);
+
+          const fields = document.createElement('div');
+          fields.className = 'field-grid';
+
+          const timeField = document.createElement('div');
+          timeField.className = 'field';
+          timeField.innerHTML = '<label for="time-' + station.id + '">Process (ms)</label>';
+          const timeInput = document.createElement('input');
+          timeInput.id = 'time-' + station.id;
+          timeInput.type = 'number';
+          timeInput.min = 300;
+          timeInput.step = 100;
+          timeInput.value = station.processingTime;
+          timeInput.addEventListener('input', () => {
+            station.processingTime = clamp(Number(timeInput.value) || 300, 300, 120000);
+          });
+          timeField.appendChild(timeInput);
+
+          const failField = document.createElement('div');
+          failField.className = 'field';
+          failField.innerHTML = '<label for="fail-' + station.id + '">Fail Rate (%)</label>';
+          const failInput = document.createElement('input');
+          failInput.id = 'fail-' + station.id;
+          failInput.type = 'number';
+          failInput.min = 0;
+          failInput.max = 100;
+          failInput.step = 1;
+          failInput.value = Math.round((station.failureRate || 0) * 100);
+          failInput.disabled = station.type !== 'inspection';
+          failInput.addEventListener('input', () => {
+            station.failureRate = clamp(Number(failInput.value) / 100 || 0, 0, 1);
+          });
+          failField.appendChild(failInput);
+
+          fields.appendChild(timeField);
+          fields.appendChild(failField);
+
+          const stats = document.createElement('div');
+          stats.className = 'station-stats';
+          stats.innerHTML = `
+            <div class="stat-item"><span>Q:</span> <span class="value">${station.queue.length}</span></div>
+            <div class="stat-item good"><span>Done:</span> <span class="value">${station.processed}</span></div>
+            <div class="stat-item warn"><span>Busy:</span> <span class="value">${station.busy ? '✓' : '—'}</span></div>
+            <div class="stat-item"><span>Failed:</span> <span class="value">${station.failed}</span></div>
+          `;
+
+          card.appendChild(head);
+          card.appendChild(fields);
+          card.appendChild(stats);
+
+          card.addEventListener('click', () => showStationDetails(station.id));
+
+          dom.stationList.appendChild(card);
+        });
+      }
+
+      function drawRoutes() {
+        dom.routeLayer.innerHTML = `
+          <svg class="route-layer" viewBox="0 0 1200 560" preserveAspectRatio="none" aria-hidden="true"></svg>
+        `;
+      }
+
+      function renderStations() {
+        dom.stationLayer.innerHTML = '';
+
+        state.stations.forEach((station) => {
+          if (!station.enabled) return;
+
+          const node = document.createElement('div');
+          node.className = `station ${station.type}`;
+          node.setAttribute('data-station-id', station.id);
+          node.style.left = `${station.x}px`;
+          node.style.top = `${station.y}px`;
+          
+          const occupancy = clamp((station.queue.length + (station.busy ? 2 : 0)) / 5, 0.12, 1);
+          const heatValue = Math.round(occupancy * 100);
+          const heatColor = station.type === 'repair' ? '#ff8a8a' : station.type === 'inspection' ? '#ffd66a' : '#64d8ff';
+
+          node.innerHTML = `
+            <div class="station-heat" style="--heat-fill:${heatValue}%; --heat-color:${heatColor};"></div>
+            <div class="station-header">
+              <div class="station-title">${station.name}</div>
+              <div class="station-status">${station.busy ? 'busy' : 'ready'}</div>
+            </div>
+            <div class="station-metrics">
+              <span>Q: ${station.queue.length}</span>
+              <span>${station.processed}</span>
+            </div>
+            <div class="station-q"></div>
+          `;
+
+          node.addEventListener('click', (e) => {
+            if (!node.classList.contains('dragging')) showStationDetails(station.id);
+          });
+
+          // Drag and drop handlers
+          node.addEventListener('mousedown', (e) => startDragStation(e, station, node));
+
+          // Queue visualization hidden - only show queue numbers in metrics
+
+          dom.stationLayer.appendChild(node);
+        });
+      }
+
+      function updateStats() {
+        dom.statInput.textContent = state.inputTotal;
+        dom.statWip.textContent = state.units.filter((u) => u.mode !== 'completed').length;
+        dom.statPassed.textContent = state.units.filter((u) => u.outcome === 'pass').length;
+        dom.statRepair.textContent = state.repairTotal;
+        dom.statOutput.textContent = state.outputTotal;
+      }
+
+      // ==================== LOGIC ====================
+
+      function queueUnit(stationId, unit) {
+        const station = stationMap.get(stationId);
+        if (!station || !station.enabled) return false;
+        station.queue.push(unit);
+        unit.stationId = stationId;
+        unit.mode = 'queued';
+        return true;
+      }
+
+      function startStationWork(station) {
+        if (station.busy || station.queue.length === 0 || !station.enabled) return;
+
+        const unit = station.queue.shift();
+        station.busy = true;
+        unit.mode = 'processing';
+        unit.startedAt = performance.now();
+
+        const timer = window.setTimeout(() => {
+          station.busy = false;
+          completeStation(station, unit);
+        }, station.processingTime / state.animationSpeed);
+
+        unit.timer = timer;
+      }
+
+      function routeStationResult(station, unit) {
+        if (station.type === 'inspection') {
+          const failChance = station.failureRate || 0;
+          const failed = Math.random() < failChance;
+          unit.failed = failed;
+          if (failed) {
+            state.failedTotal += 1;
+            state.repairTotal += 1;
+            station.failed += 1;
+            return station.failTo;
+          }
+          return station.passTo;
+        }
+        return station.passTo;
+      }
+
+      function completeStation(station, unit) {
+        if (unit.timer) clearTimeout(unit.timer);
+
+        station.totalProcessTime += (performance.now() - unit.startedAt);
+        station.unitCount += 1;
+
+        if (station.type === 'sink') {
+          unit.mode = 'completed';
+          unit.outcome = unit.failed ? 'repaired' : 'pass';
+          state.outputTotal += 1;
+          state.units = state.units.filter((item) => item.id !== unit.id);
+          updateStats();
+          renderBoard();
+          return;
+        }
+
+        const nextId = routeStationResult(station, unit);
+        station.processed += 1;
+
+        if (station.type === 'repair') {
+          unit.failed = false;
+        }
+
+        if (nextId && stationMap.has(nextId)) {
+          const nextStation = stationMap.get(nextId);
+          const from = { x: station.x, y: station.y };
+          const to = { x: nextStation.x, y: nextStation.y };
+          const travel = clamp(Math.hypot(to.x - from.x, to.y - from.y) * 5.5, 500, 1900);
+
+          unit.mode = 'moving';
+          unit.movingFrom = station.id;
+          unit.movingTo = nextId;
+          // Units move from station center to station center along the line
+          unit.startX = station.x;
+          unit.startY = station.y;
+          unit.endX = nextStation.x;
+          unit.endY = nextStation.y;
+          unit.progress = 0;
+          unit.travelMs = travel / state.animationSpeed;
+          unit.travelStart = performance.now();
+
+          if (nextStation.enabled) {
+            nextStation.queue.push(unit);
+            if (nextId === 'repair') nextStation.repaired = (nextStation.repaired || 0) + 1;
+          }
+
+          if (station.type === 'inspection') {
+            unit.outcome = unit.failed ? 'repair' : 'pass';
+          }
+        } else {
+          unit.mode = 'completed';
+          unit.outcome = unit.failed ? 'repair' : 'pass';
+          state.outputTotal += 1;
+          state.units = state.units.filter((item) => item.id !== unit.id);
+        }
+
+        updateStats();
+        renderBoard();
+      }
+
+      function createUnit() {
+        const inbound = stationMap.get('inbound');
+        if (!inbound || !inbound.enabled) return;
+
+        const unitId = ++state.lastId;
+        const newUnit = {
+          id: unitId,
+          mode: 'queued',
+          stationId: 'inbound',
+          failed: false,
+          outcome: 'new',
+          x: 0,
+          y: 0,
+          startX: 0,
+          startY: 0,
+          endX: 0,
+          endY: 0,
+          progress: 0,
+          travelMs: 0,
+          travelStart: 0
+        };
+
+        state.units.push(newUnit);
+        queueUnit('inbound', newUnit);
+        state.inputTotal += 1;
+        updateStats();
+        renderBoard();
+      }
+
+      function resetSimulation() {
+        state.units = [];
+        state.stations.forEach((station) => {
+          station.queue = [];
+          station.busy = false;
+          station.processed = 0;
+          station.failed = 0;
+          station.repaired = 0;
+          station.totalProcessTime = 0;
+          station.unitCount = 0;
+        });
+        state.outputTotal = 0;
+        state.inputTotal = 0;
+        state.repairTotal = 0;
+        state.failedTotal = 0;
+        state.started = true;
+        state.sourceAccumulator = 0;
+        dom.toggleRun.textContent = 'Pause';
+        updateStats();
+        renderBoard();
+      }
+
+      function exportData() {
+        const data = {
+          timestamp: new Date().toISOString(),
+          summary: {
+            inputTotal: state.inputTotal,
+            outputTotal: state.outputTotal,
+            repairTotal: state.repairTotal,
+            failureRate: state.inputTotal > 0 ? ((state.repairTotal / state.inputTotal) * 100).toFixed(2) + '%' : '0%'
+          },
+          stations: state.stations.map(s => ({
+            id: s.id,
+            name: s.name,
+            type: s.type,
+            processed: s.processed,
+            failed: s.failed,
+            processingTime: s.processingTime,
+            failureRate: (s.failureRate * 100).toFixed(1) + '%'
+          }))
+        };
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flexflow-data-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function processSourceTick(deltaMs) {
+        if (!state.started) return;
+        state.sourceAccumulator += deltaMs;
+        if (state.sourceAccumulator >= state.sourceSpawnMs) {
+          const count = Math.floor(state.sourceAccumulator / state.sourceSpawnMs);
+          state.sourceAccumulator -= count * state.sourceSpawnMs;
+          for (let i = 0; i < count; i++) createUnit();
+        }
+      }
+
+      // ==================== DRAG AND DROP ====================
+
+      let dragState = null;
+
+      function startDragStation(e, station, node) {
+        if (e.button !== 0) return; // Only left mouse button
+        
+        dragState = {
+          station: station,
+          node: node,
+          startX: e.clientX,
+          startY: e.clientY,
+          stationStartX: station.x,
+          stationStartY: station.y
+        };
+
+        node.classList.add('dragging');
+        
+        function handleMouseMove(moveE) {
+          if (!dragState) return;
+          
+          const dx = moveE.clientX - dragState.startX;
+          const dy = moveE.clientY - dragState.startY;
+          
+          dragState.station.x = dragState.stationStartX + dx;
+          dragState.station.y = dragState.stationStartY + dy;
+          
+          renderBoard();
+        }
+        
+        function handleMouseUp() {
+          if (dragState) {
+            dragState.node.classList.remove('dragging');
+            dragState = null;
+          }
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        }
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+      }
+
+      function renderBoard() {
+        drawRoutes();
+        renderStations();
+
+        // Only show units that are actively moving or processing
+        const activeUnits = state.units.filter((u) => u.mode === 'moving' || u.mode === 'processing');
+        dom.unitLayer.innerHTML = '';
+
+        activeUnits.forEach((unit) => {
+          const node = document.createElement('div');
+          node.className = `unit-moving ${unit.failed ? 'fail' : ''}`;
+          // Center units on the line (offset by half their size)
+          node.style.left = `${unit.x - 8}px`;
+          node.style.top = `${unit.y - 8}px`;
+          dom.unitLayer.appendChild(node);
+        });
+      }
+
+      // ==================== ANIMATION LOOP ====================
+
+      function animate(now) {
+        const deltaMs = state.lastTs ? now - state.lastTs : 16;
+        state.lastTs = now;
+
+        if (state.started) {
+          processSourceTick(deltaMs);
+          state.stations.forEach((station) => startStationWork(station));
+        }
+
+        state.units.forEach((unit) => {
+          if (unit.mode === 'moving') {
+            const t = clamp((now - unit.travelStart) / unit.travelMs, 0, 1);
+            unit.progress = t;
+            unit.x = lerp(unit.startX, unit.endX, easeInOutCubic(t));
+            unit.y = lerp(unit.startY, unit.endY, easeInOutCubic(t));
+
+            if (t >= 1) {
+              const nextStation = stationMap.get(unit.movingTo);
+              unit.stationId = unit.movingTo;
+              unit.mode = 'queued';
+              if (nextStation && nextStation.enabled) {
+                nextStation.queue.push(unit);
+              }
+            }
+          }
+        });
+
+        renderBoard();
+        requestAnimationFrame(animate);
+      }
+
+      // ==================== EVENT LISTENERS ====================
+
+      dom.toggleRun.addEventListener('click', () => {
+        state.started = !state.started;
+        dom.toggleRun.textContent = state.started ? 'Pause' : 'Resume';
+      });
+
+      dom.injectBtn.addEventListener('click', createUnit);
+      dom.resetBtn.addEventListener('click', resetSimulation);
+      dom.exportBtn.addEventListener('click', exportData);
+      dom.modalClose.addEventListener('click', closeModal);
+      dom.detailModal.addEventListener('click', (e) => {
+        if (e.target === dom.detailModal) closeModal();
+      });
+
+      dom.spawnRate.addEventListener('input', (e) => {
+        state.sourceSpawnMs = Number(e.target.value);
+        const rate = (1000 / state.sourceSpawnMs).toFixed(1);
+        dom.spawnRateDisplay.textContent = rate + 'x/s';
+      });
+
+      dom.animSpeed.addEventListener('input', (e) => {
+        state.animationSpeed = Number(e.target.value);
+        dom.animSpeedDisplay.textContent = state.animationSpeed.toFixed(1) + 'x';
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+          e.preventDefault();
+          state.started = !state.started;
+          dom.toggleRun.textContent = state.started ? 'Pause' : 'Resume';
+        }
+        if (e.key === 'i' || e.key === 'I') createUnit();
+        if (e.key === 'r' || e.key === 'R') resetSimulation();
+        if (e.key === 'e' || e.key === 'E') exportData();
+        if (e.key === 'Escape') closeModal();
+      });
+
+      // ==================== INITIALIZATION ====================
+
+      createStationConfigControls();
+      updateStats();
+      renderBoard();
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
