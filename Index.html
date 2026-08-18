@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlexFlow Live Production Board</title>
+    <style>
+      :root {
+        --bg: #09131f;
+        --panel: rgba(12, 25, 38, 0.9);
+        --panel-2: rgba(15, 31, 48, 0.9);
+        --panel-3: rgba(23, 44, 67, 0.95);
+        --line: rgba(127, 203, 255, 0.3);
+        --text: #eaf6ff;
+        --muted: #9bb8d1;
+        --good: #32d296;
+        --warn: #ffc857;
+        --bad: #ff6b6b;
+        --accent: #5fc5ff;
+        --accent-2: #7cf7c3;
+        --shadow: rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: linear-gradient(180deg, #071119 0%, #0e1d2b 40%, #0b1621 100%);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(11, 17, 25, 0.7);
+        backdrop-filter: blur(10px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 14px;
+        height: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-radius: 4px;
+        box-shadow: 0 0 18px rgba(95, 197, 255, 0.7);
+      }
+
+      .brand h1 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid rgba(128, 188, 255, 0.3);
+        background: linear-gradient(180deg, rgba(18, 38, 56, 0.95), rgba(11, 24, 35, 0.95));
+        color: var(--text);
+        padding: 9px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      button:hover {
+        border-color: rgba(128, 188, 255, 0.7);
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, rgba(29, 120, 178, 0.9), rgba(42, 214, 156, 0.9));
+        border-color: rgba(101, 245, 199, 0.8);
+      }
+
+      button.warn {
+        background: linear-gradient(135deg, rgba(173, 120, 17, 0.9), rgba(203, 72, 39, 0.9));
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+        padding: 20px;
+        flex: 1;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 18px 30px var(--shadow);
+      }
+
+      .config-panel {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .station-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 66vh;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .station-card {
+        background: linear-gradient(180deg, rgba(18, 33, 48, 0.9), rgba(10, 22, 33, 0.9));
+        border: 1px solid rgba(118, 174, 233, 0.2);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .station-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .station-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      .station-type {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+      }
+
+      .station-type.source { background: rgba(54, 120, 227, 0.12); color: #8dd3ff; }
+      .station-type.process { background: rgba(17, 197, 145, 0.12); color: #8bf0c5; }
+      .station-type.inspection { background: rgba(255, 200, 87, 0.12); color: #ffe39e; }
+      .station-type.repair { background: rgba(255, 107, 107, 0.12); color: #ffb0af; }
+      .station-type.sink { background: rgba(125, 96, 255, 0.12); color: #d0bafc; }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .field input {
+        width: 100%;
+        border: 1px solid rgba(157, 193, 227, 0.25);
+        background: rgba(9, 18, 26, 0.8);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+      }
+
+      .floor-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(110px, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        background: linear-gradient(180deg, rgba(16, 33, 49, 0.9), rgba(9, 20, 32, 0.9));
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 10px;
+      }
+
+      .stat .label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+      }
+
+      .stat .value {
+        font-size: clamp(1.1rem, 2vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+
+      .good { color: var(--good); }
+      .warn { color: var(--warn); }
+      .bad { color: var(--bad); }
+      .accent { color: var(--accent); }
+
+      .board-wrap {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(10, 17, 28, 0.9), rgba(12, 22, 35, 0.9));
+        min-height: 560px;
+        overflow: hidden;
+      }
+
+      .board-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(90, 147, 199, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(90, 147, 199, 0.08) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .route-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .route-line {
+        fill: none;
+        stroke-width: 16;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.92;
+        stroke-dasharray: 18 18;
+        animation: conveyorMove 1.2s linear infinite;
+      }
+
+      .route-line.pass-lane {
+        stroke: rgba(105, 226, 255, 0.88);
+        filter: drop-shadow(0 0 10px rgba(97, 216, 255, 0.38));
+      }
+
+      .route-line.repair-lane {
+        stroke: rgba(255, 120, 120, 0.95);
+        filter: drop-shadow(0 0 10px rgba(255, 124, 124, 0.44));
+      }
+
+      @keyframes conveyorMove {
+        from { stroke-dashoffset: 0; }
+        to { stroke-dashoffset: -36; }
+      }
+
+      .station {
+        position: absolute;
+        width: 150px;
+        min-height: 100px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(18, 36, 59, 0.9), rgba(10, 25, 38, 0.95));
+        border: 1px solid rgba(120, 193, 255, 0.28);
+        box-shadow: 0 12px 18px rgba(0, 0, 0, 0.25);
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12px 10px 10px 10px;
+      }
+
+      .station.source { border-color: rgba(117, 161, 255, 0.7); }
+      .station.process { border-color: rgba(76, 255, 181, 0.7); }
+      .station.inspection { border-color: rgba(255, 201, 87, 0.8); }
+      .station.repair { border-color: rgba(255, 101, 101, 0.8); }
+      .station.sink { border-color: rgba(156, 125, 255, 0.8); }
+
+      .station-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .station-heat {
+        --heat-fill: 30%;
+        --heat-color: rgba(91, 223, 255, 0.95);
+        position: relative;
+        width: 54px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(164, 204, 255, 0.2);
+        overflow: hidden;
+        margin: 0 0 8px auto;
+      }
+
+      .station-heat::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--heat-fill);
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(76, 253, 171, 0.9), var(--heat-color));
+        box-shadow: 0 0 12px var(--heat-color);
+      }
+
+      .station-title {
+        font-weight: 700;
+        font-size: 0.86rem;
+        white-space: nowrap;
+      }
+
+      .station-status {
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.04);
+        font-size: 0.64rem;
+        padding: 3px 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+
+      .station-metrics {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.4;
+      }
+
+      .station-q {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 18px;
+        margin-top: 8px;
+      }
+
+      .unit-chip {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6ee6ff, #8ef0b9);
+        box-shadow: 0 0 12px rgba(110, 230, 255, 0.7);
+      }
+
+      .unit-chip.fail {
+        background: linear-gradient(135deg, #ff9a8d, #ff6b6b);
+        box-shadow: 0 0 12px rgba(255, 107, 107, 0.7);
+      }
+
+      .unit-chip.done {
+        background: linear-gradient(135deg, #8ff7c4, #49d19a);
+      }
+
+      .unit-moving {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5cc7ff, #9afdd4);
+        box-shadow: 0 0 16px rgba(92, 199, 255, 0.8);
+        border: 2px solid rgba(255,255,255,0.75);
+        pointer-events: none;
+        z-index: 25;
+      }
+
+      .unit-moving.fail {
+        background: linear-gradient(135deg, #ff9b8a, #ff5c64);
+        box-shadow: 0 0 18px rgba(255, 92, 100, 0.9);
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 10px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      @media (max-width: 1100px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, minmax(110px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <h1>FlexFlow Live Floor</h1>
+      </div>
+      <div class="actions">
+        <button id="toggleRun" class="primary">Pause</button>
+        <button id="injectBtn">Inject Unit</button>
+        <button id="resetBtn" class="warn">Reset</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel config-panel">
+        <div class="panel-header">
+          <h2>Station Controls</h2>
+        </div>
+        <div id="stationList" class="station-list"></div>
+      </aside>
+
+      <section class="panel floor-panel">
+        <div class="stats">
+          <div class="stat">
+            <span class="label">Input</span>
+            <span id="statInput" class="value accent">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">WIP</span>
+            <span id="statWip" class="value warn">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Passed</span>
+            <span id="statPassed" class="value good">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Repair</span>
+            <span id="statRepair" class="value bad">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Output</span>
+            <span id="statOutput" class="value accent">0</span>
+          </div>
+        </div>
+
+        <div id="boardWrap" class="board-wrap">
+          <div class="board-grid"></div>
+          <div id="routeLayer"></div>
+          <div id="stationLayer"></div>
+          <div id="unitLayer"></div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:#6ee6ff"></span> Active</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span> Repair route</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:#45d19a"></span> Passed</div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const stationDefs = [
+        { id: 'inbound', name: 'Inbound', type: 'source', x: 120, y: 230, processingTime: 1200, failureRate: 0, passTo: 'laser', failTo: null },
+        { id: 'laser', name: 'Laser Cut', type: 'process', x: 300, y: 230, processingTime: 1800, failureRate: 0, passTo: 'qa1', failTo: null },
+        { id: 'qa1', name: 'QA 1', type: 'inspection', x: 500, y: 230, processingTime: 1500, failureRate: 0.14, passTo: 'finalqa', failTo: 'repair' },
+        { id: 'repair', name: 'Repair', type: 'repair', x: 500, y: 420, processingTime: 2200, failureRate: 0, passTo: 'finalqa', failTo: null },
+        { id: 'finalqa', name: 'Final QA', type: 'inspection', x: 720, y: 230, processingTime: 1700, failureRate: 0.08, passTo: 'pack', failTo: 'repair' },
+        { id: 'pack', name: 'Pack', type: 'process', x: 930, y: 230, processingTime: 1400, failureRate: 0, passTo: 'outbound', failTo: null },
+        { id: 'outbound', name: 'Outbound', type: 'sink', x: 1120, y: 230, processingTime: 800, failureRate: 0, passTo: null, failTo: null }
+      ];
+
+      const state = {
+        started: true,
+        units: [],
+        lastId: 0,
+        inputTotal: 0,
+        outputTotal: 0,
+        repairTotal: 0,
+        failedTotal: 0,
+        lastTs: 0,
+        sourceSpawnMs: 1600,
+        sourceAccumulator: 0,
+        renderTick: 0,
+        stations: stationDefs.map((station) => ({ ...station, queue: [], busy: false, processed: 0, repaired: 0, output: 0 }))
+      };
+
+      const stationMap = new Map();
+      state.stations.forEach((station) => stationMap.set(station.id, station));
+
+      const boardWrap = document.getElementById('boardWrap');
+      const stationLayer = document.getElementById('stationLayer');
+      const routeLayer = document.getElementById('routeLayer');
+      const unitLayer = document.getElementById('unitLayer');
+      const stationList = document.getElementById('stationList');
+
+      function colorForType(type) {
+        if (type === 'source') return '#66b5ff';
+        if (type === 'process') return '#5bffba';
+        if (type === 'inspection') return '#ffd76a';
+        if (type === 'repair') return '#ff7d7d';
+        return '#cda8ff';
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function formatTime(ms) {
+        return `${Math.max(0, Math.round(ms / 100) / 10)}s`;
+      }
+
+      function createStationConfigControls() {
+        stationList.innerHTML = '';
+
+        state.stations.forEach((station) => {
+          const card = document.createElement('div');
+          card.className = 'station-card';
+
+          const head = document.createElement('div');
+          head.className = 'station-head';
+
+          const name = document.createElement('div');
+          name.className = 'station-name';
+          name.textContent = station.name;
+
+          const type = document.createElement('div');
+          type.className = `station-type ${station.type}`;
+          type.textContent = station.type;
+
+          head.appendChild(name);
+          head.appendChild(type);
+
+          const fields = document.createElement('div');
+          fields.className = 'field-grid';
+
+          const timeField = document.createElement('div');
+          timeField.className = 'field';
+          timeField.innerHTML = '<label>Process</label>';
+          const timeInput = document.createElement('input');
+          timeInput.type = 'number';
+          timeInput.min = 300;
+          timeInput.step = 100;
+          timeInput.value = station.processingTime;
+          timeInput.addEventListener('input', () => {
+            station.processingTime = clamp(Number(timeInput.value) || 300, 300, 120000);
+          });
+          timeField.appendChild(timeInput);
+
+          const failField = document.createElement('div');
+          failField.className = 'field';
+          failField.innerHTML = '<label>Fail rate</label>';
+          const failInput = document.createElement('input');
+          failInput.type = 'number';
+          failInput.min = 0;
+          failInput.max = 100;
+          failInput.step = 1;
+          failInput.value = Math.round((station.failureRate || 0) * 100);
+          failInput.disabled = station.type !== 'inspection';
+          failInput.addEventListener('input', () => {
+            station.failureRate = clamp(Number(failInput.value) / 100 || 0, 0, 1);
+          });
+          failField.appendChild(failInput);
+
+          fields.appendChild(timeField);
+          fields.appendChild(failField);
+
+          card.appendChild(head);
+          card.appendChild(fields);
+          stationList.appendChild(card);
+        });
+      }
+
+      function drawRoutes() {
+        routeLayer.innerHTML = `
+          <svg class="route-layer" viewBox="0 0 1200 560" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="passGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stop-color="rgba(72, 179, 255, 0.8)" />
+                <stop offset="100%" stop-color="rgba(105, 255, 215, 0.9)" />
+              </linearGradient>
+              <linearGradient id="repairGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stop-color="rgba(255, 120, 120, 0.86)" />
+                <stop offset="100%" stop-color="rgba(255, 180, 120, 0.9)" />
+              </linearGradient>
+            </defs>
+          </svg>
+        `;
+
+        const svg = routeLayer.querySelector('svg');
+        const lines = [
+          ['inbound', 'laser'],
+          ['laser', 'qa1'],
+          ['qa1', 'finalqa'],
+          ['qa1', 'repair'],
+          ['repair', 'finalqa'],
+          ['finalqa', 'pack'],
+          ['pack', 'outbound']
+        ];
+
+        lines.forEach(([fromId, toId]) => {
+          const from = stationMap.get(fromId);
+          const to = stationMap.get(toId);
+          const lift = toId === 'repair' ? 70 : fromId === 'repair' ? -70 : -36;
+          const cx = (from.x + to.x) / 2;
+          const cy = (from.y + to.y) / 2 + lift;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', `M ${from.x} ${from.y + 12} Q ${cx} ${cy} ${to.x} ${to.y + 12}`);
+          path.setAttribute('class', `route-line ${toId === 'repair' ? 'repair-lane' : 'pass-lane'}`);
+          path.setAttribute('stroke', toId === 'repair' ? 'rgba(255, 120, 120, 0.96)' : 'rgba(100, 224, 255, 0.92)');
+          svg.appendChild(path);
+        });
+      }
+
+      function renderStations() {
+        stationLayer.innerHTML = '';
+
+        state.stations.forEach((station) => {
+          const node = document.createElement('div');
+          node.className = `station ${station.type}`;
+          node.style.left = `${station.x}px`;
+          node.style.top = `${station.y}px`;
+          const occupancy = clamp((station.queue.length + (station.busy ? 2 : 0)) / 5, 0.12, 1);
+          const heatValue = Math.round(occupancy * 100);
+          const heatColor = station.type === 'repair' ? '#ff8a8a' : station.type === 'inspection' ? '#ffd66a' : '#64d8ff';
+
+          node.innerHTML = `
+            <div class="station-heat" style="--heat-fill:${heatValue}%; --heat-color:${heatColor};"></div>
+            <div class="station-header">
+              <div class="station-title">${station.name}</div>
+              <div class="station-status">${station.busy ? 'busy' : 'ready'}</div>
+            </div>
+            <div class="station-metrics">
+              <span>Queue: ${station.queue.length}</span>
+              <span>${station.processed}</span>
+            </div>
+            <div class="station-q"></div>
+          `;
+
+          const queueBox = node.querySelector('.station-q');
+          const visibleUnits = station.queue.slice(0, 12);
+          visibleUnits.forEach((unit) => {
+            const chip = document.createElement('div');
+            chip.className = `unit-chip ${unit.failed ? 'fail' : ''}`;
+            chip.title = unit.failed ? 'Failed and routed to repair' : 'Healthy unit';
+            queueBox.appendChild(chip);
+          });
+
+          if (station.type === 'source' && station.queue.length === 0) {
+            queueBox.appendChild(Object.assign(document.createElement('div'), { className: 'unit-chip done' }));
+          }
+
+          stationLayer.appendChild(node);
+        });
+      }
+
+      function updateStats() {
+        document.getElementById('statInput').textContent = state.inputTotal;
+        document.getElementById('statWip').textContent = state.units.filter((u) => u.mode !== 'completed').length;
+        document.getElementById('statPassed').textContent = state.units.filter((u) => u.outcome === 'pass').length;
+        document.getElementById('statRepair').textContent = state.repairTotal;
+        document.getElementById('statOutput').textContent = state.outputTotal;
+      }
+
+      function queueUnit(stationId, unit) {
+        const station = stationMap.get(stationId);
+        station.queue.push(unit);
+        unit.stationId = stationId;
+        unit.mode = 'queued';
+      }
+
+      function startStationWork(station) {
+        if (station.busy || station.queue.length === 0) return;
+
+        const unit = station.queue.shift();
+        station.busy = true;
+        unit.mode = 'processing';
+        unit.startedAt = performance.now();
+
+        const timer = window.setTimeout(() => {
+          station.busy = false;
+          completeStation(station, unit);
+        }, station.processingTime);
+
+        unit.timer = timer;
+      }
+
+      function routeStationResult(station, unit) {
+        if (station.type === 'inspection') {
+          const failChance = station.failureRate || 0;
+          const failed = Math.random() < failChance;
+          unit.failed = failed;
+          if (failed) {
+            state.failedTotal += 1;
+            state.repairTotal += 1;
+            return station.failTo;
+          }
+          return station.passTo;
+        }
+
+        if (station.type === 'source') {
+          return station.passTo;
+        }
+
+        return station.passTo;
+      }
+
+      function completeStation(station, unit) {
+        if (unit.timer) {
+          clearTimeout(unit.timer);
+        }
+
+        if (station.type === 'sink') {
+          unit.mode = 'completed';
+          unit.outcome = unit.failed ? 'repaired' : 'pass';
+          state.outputTotal += 1;
+          state.units = state.units.filter((item) => item.id !== unit.id);
+          updateStats();
+          renderBoard();
+          return;
+        }
+
+        const nextId = routeStationResult(station, unit);
+        station.processed += 1;
+
+        if (station.type === 'repair') {
+          unit.failed = false;
+        }
+
+        if (nextId && stationMap.has(nextId)) {
+          const nextStation = stationMap.get(nextId);
+          const from = { x: station.x, y: station.y };
+          const to = { x: nextStation.x, y: nextStation.y };
+          const travel = clamp(Math.hypot(to.x - from.x, to.y - from.y) * 5.5, 500, 1900);
+
+          unit.mode = 'moving';
+          unit.movingFrom = station.id;
+          unit.movingTo = nextId;
+          unit.startX = station.x + 20;
+          unit.startY = station.y + 20;
+          unit.endX = nextStation.x + 20;
+          unit.endY = nextStation.y + 20;
+          unit.progress = 0;
+          unit.travelMs = travel;
+          unit.travelStart = performance.now();
+          unit.routeNote = nextId === 'repair' ? 'repair-route' : 'pass-route';
+
+          if (unit.failed && nextId === 'repair') {
+            unit.routeNote = 'repair-route';
+          }
+
+          if (nextId === 'repair') {
+            nextStation.repaired += 1;
+          }
+
+          if (station.type === 'inspection' && unit.failed) {
+            unit.outcome = 'repair';
+          }
+
+          if (station.type === 'inspection' && !unit.failed) {
+            unit.outcome = 'pass';
+          }
+        } else {
+          unit.mode = 'completed';
+          unit.outcome = unit.failed ? 'repair' : 'pass';
+          state.outputTotal += 1;
+          state.units = state.units.filter((item) => item.id !== unit.id);
+        }
+
+        updateStats();
+        renderBoard();
+      }
+
+      function createUnit() {
+        const unitId = ++state.lastId;
+        const newUnit = {
+          id: unitId,
+          mode: 'queued',
+          stationId: 'inbound',
+          failed: false,
+          outcome: 'new',
+          x: 0,
+          y: 0,
+          startX: 0,
+          startY: 0,
+          endX: 0,
+          endY: 0,
+          progress: 0,
+          travelMs: 0,
+          travelStart: 0,
+          routeNote: 'pass-route'
+        };
+
+        state.units.push(newUnit);
+        queueUnit('inbound', newUnit);
+        state.inputTotal += 1;
+        updateStats();
+        renderBoard();
+      }
+
+      function resetSimulation() {
+        state.units = [];
+        state.stations.forEach((station) => {
+          station.queue = [];
+          station.busy = false;
+          station.processed = 0;
+          station.repaired = 0;
+          station.output = 0;
+        });
+        state.outputTotal = 0;
+        state.inputTotal = 0;
+        state.repairTotal = 0;
+        state.failedTotal = 0;
+        state.started = true;
+        state.sourceAccumulator = 0;
+        document.getElementById('toggleRun').textContent = 'Pause';
+        updateStats();
+        renderBoard();
+      }
+
+      function processSourceTick(deltaMs) {
+        if (!state.started) return;
+        state.sourceAccumulator += deltaMs;
+        if (state.sourceAccumulator >= state.sourceSpawnMs) {
+          const count = Math.floor(state.sourceAccumulator / state.sourceSpawnMs);
+          state.sourceAccumulator -= count * state.sourceSpawnMs;
+          for (let index = 0; index < count; index += 1) {
+            createUnit();
+          }
+        }
+      }
+
+      function animate(now) {
+        const deltaMs = state.lastTs ? now - state.lastTs : 16;
+        state.lastTs = now;
+
+        if (state.started) {
+          processSourceTick(deltaMs);
+          state.stations.forEach((station) => startStationWork(station));
+        }
+
+        state.units.forEach((unit) => {
+          if (unit.mode === 'moving') {
+            const t = clamp((now - unit.travelStart) / unit.travelMs, 0, 1);
+            unit.progress = t;
+            unit.x = lerp(unit.startX, unit.endX, easeInOutCubic(t));
+            unit.y = lerp(unit.startY, unit.endY, easeInOutCubic(t));
+
+            if (t >= 1) {
+              const nextStation = stationMap.get(unit.movingTo);
+              unit.stationId = unit.movingTo;
+              unit.mode = 'queued';
+              nextStation.queue.push(unit);
+              unit.x = nextStation.x + 20;
+              unit.y = nextStation.y + 20;
+            }
+          }
+        });
+
+        renderBoard();
+        requestAnimationFrame(animate);
+      }
+
+      function renderBoard() {
+        drawRoutes();
+        renderStations();
+
+        const movingUnits = state.units.filter((unit) => unit.mode === 'moving' || unit.mode === 'queued' || unit.mode === 'processing');
+        unitLayer.innerHTML = '';
+
+        movingUnits.forEach((unit) => {
+          if (unit.mode === 'moving') {
+            const node = document.createElement('div');
+            node.className = `unit-moving ${unit.failed ? 'fail' : ''}`;
+            node.style.left = `${unit.x}px`;
+            node.style.top = `${unit.y}px`;
+            node.title = unit.failed ? 'Failed unit moving to repair' : 'Healthy unit in motion';
+            unitLayer.appendChild(node);
+            return;
+          }
+
+          const station = stationMap.get(unit.stationId);
+          if (!station) return;
+
+          const index = station.queue.findIndex((queueUnit) => queueUnit.id === unit.id);
+          const x = station.x - 55 + (index % 3) * 22;
+          const y = station.y + 28 + Math.floor(index / 3) * 12;
+          const node = document.createElement('div');
+          node.className = `unit-moving ${unit.failed ? 'fail' : ''}`;
+          node.style.left = `${x}px`;
+          node.style.top = `${y}px`;
+          node.style.width = '12px';
+          node.style.height = '12px';
+          node.title = unit.failed ? 'Failed unit in queue' : 'Unit in queue';
+          unitLayer.appendChild(node);
+        });
+      }
+
+      document.getElementById('toggleRun').addEventListener('click', () => {
+        state.started = !state.started;
+        document.getElementById('toggleRun').textContent = state.started ? 'Pause' : 'Resume';
+      });
+
+      document.getElementById('injectBtn').addEventListener('click', createUnit);
+      document.getElementById('resetBtn').addEventListener('click', resetSimulation);
+
+      createStationConfigControls();
+      updateStats();
+      renderBoard();
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
