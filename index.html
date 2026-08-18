@@ -88,6 +88,12 @@
         border-radius: var(--radius-sm);
         box-shadow: 0 0 18px rgba(95, 197, 255, 0.7);
         flex-shrink: 0;
+        cursor: pointer;
+        transition: transform var(--transition-fast);
+      }
+
+      .brand-mark:hover {
+        transform: scale(1.2);
       }
 
       .brand h1 {
@@ -96,12 +102,52 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
         margin: 0;
+        cursor: pointer;
       }
 
       .actions {
         display: flex;
         gap: var(--spacing-md);
         flex-wrap: wrap;
+      }
+
+      .control-group {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+        padding: 0 var(--spacing-md);
+        border-right: 1px solid var(--line);
+      }
+
+      .control-group:last-child {
+        border-right: none;
+      }
+
+      .slider-control {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        white-space: nowrap;
+      }
+
+      .slider-control label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .slider-control input[type="range"] {
+        width: 100px;
+        height: 6px;
+        cursor: pointer;
+      }
+
+      .slider-value {
+        min-width: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent);
       }
 
       button {
@@ -186,6 +232,21 @@
         border: 1px solid rgba(118, 174, 233, 0.2);
         border-radius: var(--radius-md);
         padding: var(--spacing-md);
+        cursor: pointer;
+        transition: all var(--transition-standard);
+        user-select: none;
+      }
+
+      .station-card:hover {
+        border-color: var(--accent);
+        background: linear-gradient(180deg, rgba(25, 40, 55, 0.95), rgba(15, 28, 40, 0.95));
+        box-shadow: 0 0 12px rgba(95, 197, 255, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .station-card.disabled {
+        opacity: 0.5;
+        border-color: rgba(255, 107, 107, 0.3);
       }
 
       .station-head {
@@ -198,6 +259,41 @@
       .station-name {
         font-weight: 700;
         font-size: 0.95rem;
+        flex: 1;
+      }
+
+      .station-toggle {
+        width: 32px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        position: relative;
+        transition: background var(--transition-fast);
+        margin-left: var(--spacing-sm);
+      }
+
+      .station-toggle::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: var(--text);
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: left var(--transition-fast);
+      }
+
+      .station-toggle.active {
+        background: rgba(50, 210, 150, 0.3);
+        border-color: var(--good);
+      }
+
+      .station-toggle.active::after {
+        left: 16px;
+        background: var(--good);
       }
 
       .station-type {
@@ -444,6 +540,156 @@
         font-variant-numeric: tabular-nums;
       }
 
+      .station-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xs);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: var(--spacing-sm);
+        font-size: 0.75rem;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+      }
+
+      .stat-item .value {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .stat-item.good .value {
+        color: var(--good);
+      }
+
+      .stat-item.warn .value {
+        color: var(--warn);
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition-fast);
+      }
+
+      .modal-close:hover {
+        color: var(--text);
+      }
+
+      .modal-section {
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .modal-section h3 {
+        margin: 0 0 var(--spacing-sm) 0;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.05em;
+      }
+
+      .modal-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+      }
+
+      .modal-stat {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-sm);
+      }
+
+      .modal-stat-label {
+        font-size: 0.7rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: var(--spacing-xs);
+      }
+
+      .modal-stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: var(--text);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 500;
+        display: none;
+      }
+
+      .tooltip.show {
+        display: block;
+      }
+
+      .help-text {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: var(--spacing-xs);
+        font-style: italic;
+      }
+
       .station-q {
         display: flex;
         flex-wrap: wrap;
@@ -545,13 +791,28 @@
   <body>
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark"></div>
-        <h1>FlexFlow Live Floor</h1>
+        <div class="brand-mark" title="Click to show help"></div>
+        <h1 title="FlexFlow Production Simulator">FlexFlow Live Floor</h1>
+      </div>
+      <div class="control-group">
+        <div class="slider-control">
+          <label for="spawnRate">Spawn Rate</label>
+          <input type="range" id="spawnRate" min="500" max="3000" value="1600" step="100">
+          <span class="slider-value" id="spawnRateDisplay">1.6x/s</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="slider-control">
+          <label for="animSpeed">Speed</label>
+          <input type="range" id="animSpeed" min="0.5" max="2" value="1" step="0.1">
+          <span class="slider-value" id="animSpeedDisplay">1.0x</span>
+        </div>
       </div>
       <div class="actions">
-        <button id="toggleRun" class="primary">Pause</button>
-        <button id="injectBtn">Inject Unit</button>
-        <button id="resetBtn" class="warn">Reset</button>
+        <button id="toggleRun" class="primary" title="Pause/Resume simulation (Space)">Pause</button>
+        <button id="injectBtn" title="Inject one unit (I)">Inject Unit</button>
+        <button id="exportBtn" title="Export simulation data">Export Data</button>
+        <button id="resetBtn" class="warn" title="Reset all data (R)">Reset</button>
       </div>
     </header>
 
@@ -602,22 +863,25 @@
       </section>
     </main>
 
+    <div id="detailModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Station Details</h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
     <script>
       // ==================== UTILITIES ====================
       
-      /** Clamp a value between min and max */
       const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
-      /** Linear interpolation between two values */
       const lerp = (a, b, t) => a + (b - a) * t;
-
-      /** Easing function for smooth animations */
       const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-      /** Format milliseconds to seconds string */
       const formatTime = (ms) => `${Math.max(0, Math.round(ms / 100) / 10)}s`;
-
-      /** Get color for station type */
       const colorForType = (type) => ({
         source: '#66b5ff',
         process: '#5bffba',
@@ -651,14 +915,18 @@
         lastTs: 0,
         sourceSpawnMs: 1600,
         sourceAccumulator: 0,
-        renderTick: 0,
+        animationSpeed: 1,
         stations: stationDefs.map((station) => ({ 
           ...station, 
           queue: [], 
           busy: false, 
           processed: 0, 
-          repaired: 0, 
-          output: 0 
+          repaired: 0,
+          failed: 0,
+          output: 0,
+          enabled: true,
+          totalProcessTime: 0,
+          unitCount: 0
         }))
       };
 
@@ -680,20 +948,102 @@
         statOutput: document.getElementById('statOutput'),
         toggleRun: document.getElementById('toggleRun'),
         injectBtn: document.getElementById('injectBtn'),
-        resetBtn: document.getElementById('resetBtn')
+        resetBtn: document.getElementById('resetBtn'),
+        exportBtn: document.getElementById('exportBtn'),
+        spawnRate: document.getElementById('spawnRate'),
+        spawnRateDisplay: document.getElementById('spawnRateDisplay'),
+        animSpeed: document.getElementById('animSpeed'),
+        animSpeedDisplay: document.getElementById('animSpeedDisplay'),
+        detailModal: document.getElementById('detailModal'),
+        modalClose: document.getElementById('modalClose'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalBody: document.getElementById('modalBody'),
+        tooltip: document.getElementById('tooltip')
       };
+
+      // ==================== MODAL & DETAIL MANAGEMENT ====================
+
+      function showStationDetails(stationId) {
+        const station = stationMap.get(stationId);
+        if (!station) return;
+
+        const throughput = station.unitCount > 0 ? (station.processed / station.unitCount * 100).toFixed(1) : '0';
+        const avgTime = station.unitCount > 0 ? (station.totalProcessTime / station.processed).toFixed(0) : '0';
+
+        dom.modalTitle.textContent = station.name;
+        dom.modalBody.innerHTML = `
+          <div class="modal-section">
+            <h3>Configuration</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Type</div>
+                <div class="modal-stat-value" style="font-size: 0.9rem; text-transform: uppercase; color: ${colorForType(station.type)}">${station.type}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Status</div>
+                <div class="modal-stat-value" style="font-size: 0.85rem; color: ${station.enabled ? 'var(--good)' : 'var(--bad)'}">${station.enabled ? 'Enabled' : 'Disabled'}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Process Time (ms)</div>
+                <div class="modal-stat-value">${station.processingTime}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Failure Rate</div>
+                <div class="modal-stat-value">${(station.failureRate * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>Current Status</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Queue Length</div>
+                <div class="modal-stat-value">${station.queue.length}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Status</div>
+                <div class="modal-stat-value" style="font-size: 0.9rem; color: ${station.busy ? 'var(--warn)' : 'var(--good)'}">${station.busy ? 'Processing' : 'Idle'}</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>Statistics</h3>
+            <div class="modal-stats-grid">
+              <div class="modal-stat">
+                <div class="modal-stat-label">Total Processed</div>
+                <div class="modal-stat-value">${station.processed}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Failed Units</div>
+                <div class="modal-stat-value" style="color: var(--bad)">${station.failed}</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Throughput</div>
+                <div class="modal-stat-value">${throughput}%</div>
+              </div>
+              <div class="modal-stat">
+                <div class="modal-stat-label">Avg Time (ms)</div>
+                <div class="modal-stat-value">${avgTime}</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        dom.detailModal.classList.add('active');
+      }
+
+      function closeModal() {
+        dom.detailModal.classList.remove('active');
+      }
 
       // ==================== RENDERING ====================
 
-      /**
-       * Create station configuration controls in the sidebar
-       */
       function createStationConfigControls() {
         dom.stationList.innerHTML = '';
 
         state.stations.forEach((station) => {
           const card = document.createElement('div');
-          card.className = 'station-card';
+          card.className = `station-card ${!station.enabled ? 'disabled' : ''}`;
           card.setAttribute('data-station-id', station.id);
 
           const head = document.createElement('div');
@@ -708,22 +1058,32 @@
           type.textContent = station.type;
           type.setAttribute('title', `Station type: ${station.type}`);
 
+          const toggle = document.createElement('div');
+          toggle.className = `station-toggle ${station.enabled ? 'active' : ''}`;
+          toggle.title = `Click to ${station.enabled ? 'disable' : 'enable'} station`;
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            station.enabled = !station.enabled;
+            card.classList.toggle('disabled');
+            toggle.classList.toggle('active');
+          });
+
           head.appendChild(name);
           head.appendChild(type);
+          head.appendChild(toggle);
 
           const fields = document.createElement('div');
           fields.className = 'field-grid';
 
           const timeField = document.createElement('div');
           timeField.className = 'field';
-          timeField.innerHTML = '<label for="time-' + station.id + '">Process Time (ms)</label>';
+          timeField.innerHTML = '<label for="time-' + station.id + '">Process (ms)</label>';
           const timeInput = document.createElement('input');
           timeInput.id = 'time-' + station.id;
           timeInput.type = 'number';
           timeInput.min = 300;
           timeInput.step = 100;
           timeInput.value = station.processingTime;
-          timeInput.setAttribute('aria-label', `Processing time for ${station.name}`);
           timeInput.addEventListener('input', () => {
             station.processingTime = clamp(Number(timeInput.value) || 300, 300, 120000);
           });
@@ -731,7 +1091,7 @@
 
           const failField = document.createElement('div');
           failField.className = 'field';
-          failField.innerHTML = '<label for="fail-' + station.id + '">Failure Rate (%)</label>';
+          failField.innerHTML = '<label for="fail-' + station.id + '">Fail Rate (%)</label>';
           const failInput = document.createElement('input');
           failInput.id = 'fail-' + station.id;
           failInput.type = 'number';
@@ -740,7 +1100,6 @@
           failInput.step = 1;
           failInput.value = Math.round((station.failureRate || 0) * 100);
           failInput.disabled = station.type !== 'inspection';
-          failInput.setAttribute('aria-label', `Failure rate for ${station.name}`);
           failInput.addEventListener('input', () => {
             station.failureRate = clamp(Number(failInput.value) / 100 || 0, 0, 1);
           });
@@ -749,15 +1108,25 @@
           fields.appendChild(timeField);
           fields.appendChild(failField);
 
+          const stats = document.createElement('div');
+          stats.className = 'station-stats';
+          stats.innerHTML = `
+            <div class="stat-item"><span>Q:</span> <span class="value">${station.queue.length}</span></div>
+            <div class="stat-item good"><span>Done:</span> <span class="value">${station.processed}</span></div>
+            <div class="stat-item warn"><span>Busy:</span> <span class="value">${station.busy ? '✓' : '—'}</span></div>
+            <div class="stat-item"><span>Failed:</span> <span class="value">${station.failed}</span></div>
+          `;
+
           card.appendChild(head);
           card.appendChild(fields);
+          card.appendChild(stats);
+
+          card.addEventListener('click', () => showStationDetails(station.id));
+
           dom.stationList.appendChild(card);
         });
       }
 
-      /**
-       * Draw SVG routes between stations
-       */
       function drawRoutes() {
         dom.routeLayer.innerHTML = `
           <svg class="route-layer" viewBox="0 0 1200 560" preserveAspectRatio="none" aria-hidden="true">
@@ -799,18 +1168,18 @@
         });
       }
 
-      /**
-       * Render all station visuals on the board
-       */
       function renderStations() {
         dom.stationLayer.innerHTML = '';
 
         state.stations.forEach((station) => {
+          if (!station.enabled) return;
+
           const node = document.createElement('div');
           node.className = `station ${station.type}`;
           node.setAttribute('data-station-id', station.id);
           node.style.left = `${station.x}px`;
           node.style.top = `${station.y}px`;
+          node.style.cursor = 'pointer';
           
           const occupancy = clamp((station.queue.length + (station.busy ? 2 : 0)) / 5, 0.12, 1);
           const heatValue = Math.round(occupancy * 100);
@@ -829,13 +1198,14 @@
             <div class="station-q"></div>
           `;
 
+          node.addEventListener('click', () => showStationDetails(station.id));
+
           const queueBox = node.querySelector('.station-q');
           const visibleUnits = station.queue.slice(0, 12);
           visibleUnits.forEach((unit) => {
             const chip = document.createElement('div');
             chip.className = `unit-chip ${unit.failed ? 'fail' : ''}`;
-            chip.title = unit.failed ? 'Failed and routed to repair' : 'Healthy unit';
-            chip.setAttribute('aria-label', `Unit ${unit.id} - ${unit.failed ? 'failed' : 'healthy'}`);
+            chip.title = unit.failed ? 'Failed' : 'Healthy';
             queueBox.appendChild(chip);
           });
 
@@ -847,9 +1217,6 @@
         });
       }
 
-      /**
-       * Update stat displays
-       */
       function updateStats() {
         dom.statInput.textContent = state.inputTotal;
         dom.statWip.textContent = state.units.filter((u) => u.mode !== 'completed').length;
@@ -860,21 +1227,17 @@
 
       // ==================== LOGIC ====================
 
-      /**
-       * Add a unit to a station's queue
-       */
       function queueUnit(stationId, unit) {
         const station = stationMap.get(stationId);
+        if (!station || !station.enabled) return false;
         station.queue.push(unit);
         unit.stationId = stationId;
         unit.mode = 'queued';
+        return true;
       }
 
-      /**
-       * Start processing a unit at a station
-       */
       function startStationWork(station) {
-        if (station.busy || station.queue.length === 0) return;
+        if (station.busy || station.queue.length === 0 || !station.enabled) return;
 
         const unit = station.queue.shift();
         station.busy = true;
@@ -884,14 +1247,11 @@
         const timer = window.setTimeout(() => {
           station.busy = false;
           completeStation(station, unit);
-        }, station.processingTime);
+        }, station.processingTime / state.animationSpeed);
 
         unit.timer = timer;
       }
 
-      /**
-       * Determine the next station for a unit based on inspection results
-       */
       function routeStationResult(station, unit) {
         if (station.type === 'inspection') {
           const failChance = station.failureRate || 0;
@@ -900,6 +1260,7 @@
           if (failed) {
             state.failedTotal += 1;
             state.repairTotal += 1;
+            station.failed += 1;
             return station.failTo;
           }
           return station.passTo;
@@ -907,13 +1268,11 @@
         return station.passTo;
       }
 
-      /**
-       * Handle a unit completing at a station
-       */
       function completeStation(station, unit) {
-        if (unit.timer) {
-          clearTimeout(unit.timer);
-        }
+        if (unit.timer) clearTimeout(unit.timer);
+
+        station.totalProcessTime += (performance.now() - unit.startedAt);
+        station.unitCount += 1;
 
         if (station.type === 'sink') {
           unit.mode = 'completed';
@@ -946,20 +1305,16 @@
           unit.endX = nextStation.x + 20;
           unit.endY = nextStation.y + 20;
           unit.progress = 0;
-          unit.travelMs = travel;
+          unit.travelMs = travel / state.animationSpeed;
           unit.travelStart = performance.now();
-          unit.routeNote = nextId === 'repair' ? 'repair-route' : 'pass-route';
 
-          if (nextId === 'repair') {
-            nextStation.repaired += 1;
+          if (nextStation.enabled) {
+            nextStation.queue.push(unit);
+            if (nextId === 'repair') nextStation.repaired = (nextStation.repaired || 0) + 1;
           }
 
-          if (station.type === 'inspection' && unit.failed) {
-            unit.outcome = 'repair';
-          }
-
-          if (station.type === 'inspection' && !unit.failed) {
-            unit.outcome = 'pass';
+          if (station.type === 'inspection') {
+            unit.outcome = unit.failed ? 'repair' : 'pass';
           }
         } else {
           unit.mode = 'completed';
@@ -972,10 +1327,10 @@
         renderBoard();
       }
 
-      /**
-       * Create and queue a new unit
-       */
       function createUnit() {
+        const inbound = stationMap.get('inbound');
+        if (!inbound || !inbound.enabled) return;
+
         const unitId = ++state.lastId;
         const newUnit = {
           id: unitId,
@@ -991,8 +1346,7 @@
           endY: 0,
           progress: 0,
           travelMs: 0,
-          travelStart: 0,
-          routeNote: 'pass-route'
+          travelStart: 0
         };
 
         state.units.push(newUnit);
@@ -1002,17 +1356,16 @@
         renderBoard();
       }
 
-      /**
-       * Reset the entire simulation
-       */
       function resetSimulation() {
         state.units = [];
         state.stations.forEach((station) => {
           station.queue = [];
           station.busy = false;
           station.processed = 0;
+          station.failed = 0;
           station.repaired = 0;
-          station.output = 0;
+          station.totalProcessTime = 0;
+          station.unitCount = 0;
         });
         state.outputTotal = 0;
         state.inputTotal = 0;
@@ -1025,29 +1378,51 @@
         renderBoard();
       }
 
-      /**
-       * Process spawning new units from the source
-       */
+      function exportData() {
+        const data = {
+          timestamp: new Date().toISOString(),
+          summary: {
+            inputTotal: state.inputTotal,
+            outputTotal: state.outputTotal,
+            repairTotal: state.repairTotal,
+            failureRate: state.inputTotal > 0 ? ((state.repairTotal / state.inputTotal) * 100).toFixed(2) + '%' : '0%'
+          },
+          stations: state.stations.map(s => ({
+            id: s.id,
+            name: s.name,
+            type: s.type,
+            processed: s.processed,
+            failed: s.failed,
+            processingTime: s.processingTime,
+            failureRate: (s.failureRate * 100).toFixed(1) + '%'
+          }))
+        };
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flexflow-data-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
       function processSourceTick(deltaMs) {
         if (!state.started) return;
         state.sourceAccumulator += deltaMs;
         if (state.sourceAccumulator >= state.sourceSpawnMs) {
           const count = Math.floor(state.sourceAccumulator / state.sourceSpawnMs);
           state.sourceAccumulator -= count * state.sourceSpawnMs;
-          for (let index = 0; index < count; index += 1) {
-            createUnit();
-          }
+          for (let i = 0; i < count; i++) createUnit();
         }
       }
 
-      /**
-       * Render the entire board (routes, stations, units)
-       */
       function renderBoard() {
         drawRoutes();
         renderStations();
 
-        const movingUnits = state.units.filter((unit) => unit.mode === 'moving' || unit.mode === 'queued' || unit.mode === 'processing');
+        const movingUnits = state.units.filter((u) => u.mode === 'moving' || u.mode === 'queued' || u.mode === 'processing');
         dom.unitLayer.innerHTML = '';
 
         movingUnits.forEach((unit) => {
@@ -1056,8 +1431,6 @@
             node.className = `unit-moving ${unit.failed ? 'fail' : ''}`;
             node.style.left = `${unit.x}px`;
             node.style.top = `${unit.y}px`;
-            node.title = unit.failed ? 'Failed unit moving to repair' : 'Healthy unit in motion';
-            node.setAttribute('aria-label', `Unit ${unit.id} - ${unit.failed ? 'in repair route' : 'in transit'}`);
             dom.unitLayer.appendChild(node);
             return;
           }
@@ -1065,7 +1438,7 @@
           const station = stationMap.get(unit.stationId);
           if (!station) return;
 
-          const index = station.queue.findIndex((queueUnit) => queueUnit.id === unit.id);
+          const index = station.queue.findIndex((q) => q.id === unit.id);
           const x = station.x - 55 + (index % 3) * 22;
           const y = station.y + 28 + Math.floor(index / 3) * 12;
           const node = document.createElement('div');
@@ -1074,17 +1447,12 @@
           node.style.top = `${y}px`;
           node.style.width = '12px';
           node.style.height = '12px';
-          node.title = unit.failed ? 'Failed unit in queue' : 'Unit in queue';
-          node.setAttribute('aria-label', `Unit ${unit.id} in queue at ${station.name}`);
           dom.unitLayer.appendChild(node);
         });
       }
 
       // ==================== ANIMATION LOOP ====================
 
-      /**
-       * Main animation loop
-       */
       function animate(now) {
         const deltaMs = state.lastTs ? now - state.lastTs : 16;
         state.lastTs = now;
@@ -1105,9 +1473,9 @@
               const nextStation = stationMap.get(unit.movingTo);
               unit.stationId = unit.movingTo;
               unit.mode = 'queued';
-              nextStation.queue.push(unit);
-              unit.x = nextStation.x + 20;
-              unit.y = nextStation.y + 20;
+              if (nextStation && nextStation.enabled) {
+                nextStation.queue.push(unit);
+              }
             }
           }
         });
@@ -1125,6 +1493,35 @@
 
       dom.injectBtn.addEventListener('click', createUnit);
       dom.resetBtn.addEventListener('click', resetSimulation);
+      dom.exportBtn.addEventListener('click', exportData);
+      dom.modalClose.addEventListener('click', closeModal);
+      dom.detailModal.addEventListener('click', (e) => {
+        if (e.target === dom.detailModal) closeModal();
+      });
+
+      dom.spawnRate.addEventListener('input', (e) => {
+        state.sourceSpawnMs = Number(e.target.value);
+        const rate = (1000 / state.sourceSpawnMs).toFixed(1);
+        dom.spawnRateDisplay.textContent = rate + 'x/s';
+      });
+
+      dom.animSpeed.addEventListener('input', (e) => {
+        state.animationSpeed = Number(e.target.value);
+        dom.animSpeedDisplay.textContent = state.animationSpeed.toFixed(1) + 'x';
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+          e.preventDefault();
+          state.started = !state.started;
+          dom.toggleRun.textContent = state.started ? 'Pause' : 'Resume';
+        }
+        if (e.key === 'i' || e.key === 'I') createUnit();
+        if (e.key === 'r' || e.key === 'R') resetSimulation();
+        if (e.key === 'e' || e.key === 'E') exportData();
+        if (e.key === 'Escape') closeModal();
+      });
 
       // ==================== INITIALIZATION ====================
 
