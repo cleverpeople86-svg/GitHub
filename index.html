@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlexFlow Live Production Board</title>
+    <title>Live Production Board</title>
     <style>
       :root {
         --bg: #09131f;
@@ -34,7 +34,7 @@
       }
 
       body {
-        display: flex;
+        display: Siti;
         flex-direction: column;
         min-height: 100vh;
       }
@@ -410,7 +410,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark"></div>
-        <h1>FlexFlow Live Floor</h1>
+        <h1>Siti Live Floor</h1>
       </div>
       <div class="actions">
         <button id="toggleRun" class="primary">Pause</button>
@@ -640,19 +640,6 @@
             </div>
             <div class="station-q"></div>
           `;
-
-          const queueBox = node.querySelector('.station-q');
-          const visibleUnits = station.queue.slice(0, 12);
-          visibleUnits.forEach((unit) => {
-            const chip = document.createElement('div');
-            chip.className = `unit-chip ${unit.failed ? 'fail' : ''}`;
-            chip.title = unit.failed ? 'Failed and routed to repair' : 'Healthy unit';
-            queueBox.appendChild(chip);
-          });
-
-          if (station.type === 'source' && station.queue.length === 0) {
-            queueBox.appendChild(Object.assign(document.createElement('div'), { className: 'unit-chip done' }));
-          }
 
           stationLayer.appendChild(node);
         });
